@@ -1,7 +1,23 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import validateData from "../utils/validate";
 
 const LogInForm = () => {
   const [newUser, setNewUser] = useState(false);
+  const [errMessage, setErrMessage] = useState(null);
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const message = validateData(
+      emailRef.current.value,
+      passwordRef.current.value
+    );
+    setErrMessage(message);
+    if (message) return;
+  };
+
   const handleUserType = () => {
     setNewUser(!newUser);
   };
@@ -15,19 +31,26 @@ const LogInForm = () => {
             type="Name"
             placeholder="Your name"
             className="w-full border border-white p-2 rounded-sm my-2"
+            ref={nameRef}
           />
         )}
         <input
           type="email"
           placeholder="Email"
           className="w-full border border-white p-2 rounded-sm my-2"
+          ref={emailRef}
         />
         <input
           type="password"
           placeholder="Password"
           className="w-full border border-white p-2 rounded-sm my-2"
+          ref={passwordRef}
         />
-        <button className="bg-red-700 w-full py-2 rounded-sm my-4">
+        {errMessage && <p className="text-red-700 text-lg"> {errMessage}</p>}
+        <button
+          className="bg-red-700 w-full py-2 rounded-sm my-4"
+          onClick={handleSubmit}
+        >
           {newUser ? "Sign up" : "Sign In"}
         </button>
         <p className="my-4" onClick={handleUserType}>
