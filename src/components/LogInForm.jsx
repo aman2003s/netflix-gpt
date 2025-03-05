@@ -1,5 +1,13 @@
 import React, { useRef, useState } from "react";
 import validateData from "../utils/validate";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { auth } from "../utils/firebase";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
 
 const LogInForm = () => {
   const [newUser, setNewUser] = useState(false);
@@ -7,15 +15,56 @@ const LogInForm = () => {
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const dispatch = useDispatch();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const message = validateData(
       emailRef.current.value,
-      passwordRef.current.value
+      passwordRef.current.value,
+      nameRef.current ? nameRef.current.value : null
     );
     setErrMessage(message);
     if (message) return;
+    if (newUser) {
+      createUserWithEmailAndPassword(
+        auth,
+        emailRef.current.value,
+        passwordRef.current.value
+      )
+        .then((userCredential) => {
+          // Signed up
+          const user = userCredential.user;
+          updateProfile(user, { displayName: nameRef.current.value }).then(
+            () => {
+              const { uid, displayName, email } = auth.currentUser;
+              dispatch(addUser({ uid, displayName, email }));
+            }
+          );
+          // ...
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          // ..
+        });
+    } else {
+      signInWithEmailAndPassword(
+        auth,
+        emailRef.current.value,
+        passwordRef.current.value
+      )
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+          // ...
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrMessage(errorCode + " : " + errMessage);
+        });
+    }
   };
 
   const handleUserType = () => {
